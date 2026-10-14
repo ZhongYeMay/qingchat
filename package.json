@@ -1,0 +1,8 @@
+{
+  "name": "qingchat",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "esbuild src/app.js --bundle --minify --format=esm --outfile=app.js", "check": "node --check src/app.js" },
+  "dependencies": { "@supabase/supabase-js": "2.117.3" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}
