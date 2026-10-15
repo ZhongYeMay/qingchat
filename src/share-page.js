@@ -1,0 +1,9 @@
+import '@material/web/button/filled-button.js';
+import '@material/web/button/outlined-button.js';
+import { SHARE_API } from './sharing.js';
+const $=id=>document.getElementById(id),token=new URL(location.href).searchParams.get('s')||'';
+function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+async function load(){if(!/^[0-9a-f-]{36}$/i.test(token)){fail('分享链接不完整');return}try{const r=await fetch(SHARE_API+'?token='+encodeURIComponent(token),{referrerPolicy:'no-referrer'});const data=await r.json();if(!r.ok)throw new Error(data.error||'分享暂不可用');document.title=data.title+' · Chat';$('share-title').textContent=data.title;$('share-meta').textContent=`${data.count} 条消息 · 有效至 ${new Date(data.expires_at).toLocaleDateString('zh-CN')}`;$('shared-messages').replaceChildren();for(const m of data.messages){const row=element('article','shared-message'),head=element('header');head.append(element('strong','',m.sender),element('time','',new Date(m.created_at).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})));row.append(head);if(m.body)row.append(element('p','',m.body));if(m.image_url){const img=element('img');img.src=m.image_url;img.alt='分享的聊天图片';img.loading='lazy';row.append(img)}$('shared-messages').append(row)}$('share-loading').hidden=true;$('share-error').hidden=true}catch(e){fail(e.message)}}
+function fail(text){$('share-loading').hidden=true;$('shared-messages').replaceChildren();$('share-error').hidden=false;$('share-error').textContent=text;$('share-title').textContent='分享不可用';$('share-meta').textContent='分享可能已过期或被创建者撤销。'}
+$('copy-share').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copy-share').textContent='已复制'}catch{$('copy-share').textContent='请从地址栏复制链接'}};
+load();document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});

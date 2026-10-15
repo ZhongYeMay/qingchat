@@ -1,5 +1,5 @@
 {
-  "name": "qingchat",
+  "name": "chat",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,9 +7,12 @@
     "check": "node --check src/app.js"
   },
   "dependencies": {
+    "@material/material-color-utilities": "0.4.0",
+    "@material/web": "2.5.0",
     "@supabase/supabase-js": "2.117.3"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
-  }
+  },
+  "version": "3.0.0"
 }

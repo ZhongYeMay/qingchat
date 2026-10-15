@@ -1,48 +1,57 @@
-# 青聊
+# Chat
 
 线上地址：https://zhongyemay.github.io/qingchat/
 
-微信风格的真实聊天网站，使用 Supabase Auth、Postgres、Realtime 和私有 Storage。前端由 GitHub Pages 托管。
+Chat 3.0 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
 
 ## 使用
 
-1. 打开网站，进入「设置」选项卡。
-2. 在「设置 → 账号与登录」注册或登录；登录后点击「编辑个人资料」，查看或修改青聊号、昵称、个性签名和头像颜色。
-3. 点击 ＋ → 添加朋友，搜索朋友的完整青聊号，发送好友申请。
-4. 对方在「通讯录 → 新的朋友」接受后，即可互发文字、表情和图片。
-5. 同一账号在其他设备登录即可查看云端聊天记录。发送成功和已读状态会自动同步。
+1. 在「设置 → 账号与登录」注册或登录，编辑 Chat 号、昵称、签名和头像颜色。
+2. 在通讯录添加朋友；对方接受后即可收发文字、表情、图片，并同步消息与已读状态。
+3. 「动态」支持好友圈、公开广场、关注和收藏；可以发布文字与最多四张图片，点赞、评论、关注、收藏和转发公开动态。「公开」表示所有已登录的 Chat 用户可见。
+4. 点击单条消息的分享操作，或聊天顶部的分享按钮，选择最多 30 条消息生成只读快照。默认隐藏昵称，可设 1/7/30 天有效期。在「设置 → 聊天分享」查看和撤销链接。任何获得链接的人都能在有效期内阅读所选内容，撤销不会删除对方已保存的副本。
+5. 在「设置 → 系统通知」主动授权通知，可测试通知并控制是否显示消息正文。网页在后台且保持打开时，新消息会触发浏览器系统通知，点击可返回对应聊天。关闭网页后的 Web Push 尚未实现；系统也可能限制通知。iPhone/iPad 需先添加到主屏幕，且浏览器须支持相关 API。
+6. 「设置 → 关于 → 更新日志」保留各次版本变化，后续发布也应同步维护。
 
-图片支持 PNG/JPEG/WebP/GIF，最大 5 MB。网络中断时消息不会假装发送成功，文字会留在输入框供重试。离线时无法发送，恢复网络后会同步历史。
+聊天与动态图片支持 PNG/JPEG/WebP/GIF，单张最大 5 MB。外观偏好保存在当前浏览器，账号和内容保存在云端。网络错误会显示失败状态，不会假装发送成功。
 
-## 自定义界面
+## 分享预览的范围
 
-「设置」集中提供账号登录/注册、资料编辑、退出登录、界面主题（跟随系统/浅色/深色）、聊天字号、气泡颜色、背景色/自选背景图片、欢迎语、Enter 发送方式与新消息提示音。外观与聊天偏好保存在当前浏览器，背景图最大 2 MB；更换设备后可单独设置。恢复默认只重置这些偏好，不影响账号或聊天记录。提示音仅在网页打开且浏览器已允许播放声音时生效。
+Chat 内粘贴分享链接会显示所选聊天的标题、摘要和条数。独立 `share.html` 页面支持匿名阅读有效快照和图片，过期或撤销后不可再访问。
 
-手机端提供「青聊、通讯录、我、设置」底部导航、紧凑输入栏和图片功能面板。通讯录按昵称分组并带字母定位，联系人资料页支持直接发消息。桌面端保持深色侧栏、三栏布局和经典聊天气泡。
+GitHub Pages 是静态托管：外部社交平台抓取到的是通用 Chat Open Graph/Twitter 卡片，不会获得每条聊天专属的服务端预览。实现专属外部卡片还需要可返回动态 HTML 的托管服务或自定义域名方案。Supabase 默认 Edge Functions 域名不能直接提供可渲染的 HTML 分享页。
 
-## 本地开发
+## 开发与发布
 
 ```sh
 npm ci
 npm run check
+node tests/sw.test.mjs
 npm run build
 python3 -m http.server 3000
 ```
 
-编辑 `src/app.js` 后需要重新运行构建。根目录 `app.js` 是提交到 Pages 的打包结果。`bash build.sh` 为其他静态托管平台复制可发布文件。
+源码位于 `src/`。构建同时生成根目录 `app.js`、`share.js`，并更新静态资源内容哈希；生成文件须与源码一起提交到 Pages。`bash build.sh` 会额外将可发布文件复制到忽略的 `public/`。每次用户可见的发布须更新 `src/releases.js` 和 `package.json` 版本。
 
 ## 后端与权限
 
-项目：ChattingHub Pro（uaxnhmaczwjldvjhcysk）。迁移位于 `supabase/migrations/`，已在该项目应用。`src/config.js` 仅包含公开的 publishable key，前端没有服务端密钥。
+Supabase 项目：ChattingHub Pro（`uaxnhmaczwjldvjhcysk`）。迁移位于 `supabase/migrations/`。`src/config.js` 仅包含公开 publishable key；服务端密钥不得进入前端或仓库。保留旧 `qing_*` 表名及浏览器会话键，以兼容已有账号和消息。
 
-独立表：`qing_profiles`、`qing_friendships`、`qing_messages`、`qing_reads`。所有表启用 RLS；好友申请仅接收方可接受；消息及图片仅已确认的聊天双方可访问；已读更新使用 SECURITY INVOKER 函数，避免授予修改所属用户的权限。用户公开资料可被登录用户搜索，不包含邮箱。图片存放在私有 `qingchat-images` 桶，通过限时签名链接加载。
+聊天表 `qing_profiles`、`qing_friendships`、`qing_messages`、`qing_reads` 启用 RLS；只有已确认的聊天双方可读取消息与私有图片。公开资料不含邮箱。
 
-当前 Supabase 项目启用了邮箱自动确认，注册后可直接登录；这不表示邮箱所有权已经验证。若开启邮箱确认，请配置正式邮件服务，并在 Supabase Auth URL Configuration 添加 `https://zhongyemay.github.io/qingchat/` 为 Site URL 和 Redirect URL。找回密码需要上述回调设置和邮件服务，因此本次未在界面开放找回密码入口；配置邮件后可以开启。不能仅以请求成功作为邮件送达证明。
+动态表 `chat_posts`、`chat_likes`、`chat_comments`、`chat_follows`、`chat_bookmarks` 启用 RLS；好友动态与图片仅作者和已接受好友可读，收藏仅本人可读。私有桶 `chat-post-images` 的读取也受动态可见范围约束。
 
-当前功能为一对一好友聊天，尚未提供群聊、语音视频通话、推送通知、账号删除和聊天导出。
+`chat_shares` 由数据库按当前用户可读消息生成不可修改快照，要求所选消息属于同一聊天。前端不能伪造快照。`supabase/functions/chat-share/index.ts` 是匿名能力链接入口：校验随机 UUID、有效期与撤销状态，只返回该快照。图片代理再次校验分享及规范存储路径。该函数使用服务端环境密钥，部署时 `verify_jwt=false`；不能以此配置开放其他数据接口。响应禁用缓存，图片不暴露原始签名链接。
+
+当前项目启用邮箱自动确认，注册成功不代表邮箱所有权已验证。若开启邮箱验证或找回密码，需要配置正式邮件服务和 Auth 回调地址。尚未提供群聊、音视频通话、账号删除和聊天导出。
 
 ## 验证
 
-已用实际测试账号验证注册、资料编辑、好友搜索/申请/接受、文字与图片收发、实时跨账号和跨设备同步、持久化登录、聊天记录、已读状态与手机布局。匿名用户和第三方账号无法读取聊天、发送或伪造消息、访问私有图片。Supabase advisors 未报告新增青聊表/函数的安全问题。
+已通过真实测试账号验证聊天、动态、好友与公开可见范围、图片、点赞评论、关注收藏转发、匿名分享、昵称隐藏及即时撤销；第三方账号不能读取好友动态与图片。已验证移动布局、官方 Material 组件、主题切换与通知点击路由。安全检查未报告新增 Chat 表或函数的问题。
 
-权限集成测试：`NODE_USE_ENV_PROXY=1 node tests/integration.mjs`（代理环境）或 `node tests/integration.mjs`。测试会在配置的 Supabase 项目创建测试账号、好友关系和图片，并将账号资料保存到 Git 忽略的 `.test-accounts.json`。测试后必须清理这些测试资源，不能将该文件公开或提交。测试项目需允许测试邮箱自动确认。
+```sh
+node tests/sw.test.mjs
+NODE_USE_ENV_PROXY=1 node tests/social-integration.mjs
+```
+
+集成测试会创建真实测试账号、好友、内容和图片，将凭据保存在 Git 忽略的 `.test-v3-accounts.json`。只在允许测试邮箱自动确认的项目运行，完成后必须清理对应测试账号及存储对象；严禁提交凭据文件。旧聊天测试位于 `tests/integration.mjs`，使用独立的 `.test-accounts.json`。
