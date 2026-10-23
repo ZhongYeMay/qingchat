@@ -2,7 +2,7 @@
 
 线上地址：https://zhongyemay.github.io/qingchat/
 
-Chat 3.2 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
+Chat 3.3 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
 
 ## 使用
 
@@ -66,3 +66,13 @@ NODE_USE_ENV_PROXY=1 node tests/custom-sharing.integration.mjs
 预览会将网址发送给 Microlink，封面由浏览器按无 Referer 模式加载。内网地址、URL 用户名密码及含访问令牌等参数的链接不自动抓取。第三方 API 免费额度、站点反爬和登录要求可能导致缺少预览。部署 `link-preview` 时关闭网关 JWT 检查，由函数内 `auth.getUser(token)` 验证当前用户，以兼容现有 publishable key。
 
 验证：`node --test tests/link-preview.test.mjs`。覆盖认证、敏感链接过滤、固定请求目标、元数据解析、缓存、失败降级、限流和响应大小限制。
+
+## 头像与聊天个性化
+
+「设置 → 编辑资料与头像」可上传 PNG/JPEG/WebP（不超过 5 MB）、调整缩放及横纵位置，并在保存资料时统一提交。图片在浏览器中裁成 512×512 WebP，最大 1 MB；取消编辑不会上传文件。恢复默认头像也需保存资料。头像随账号同步到会话、通讯录、消息、动态与个人资料；昵称、签名与默认底色继续兼容。
+
+头像放在私有桶 `chat-avatars`，`qing_profiles.avatar_path` 仅能引用自己的路径。已登录用户可读取当前头像，只有上传者能上传或删除自己未引用的文件；匿名用户不能读取。更换或恢复默认后清理旧文件，读取使用 15 分钟签名链接。
+
+「外观」新增头像形状、自选气泡颜色、气泡圆角；「聊天偏好」新增紧凑/舒适间距、聊天头像与时间显示开关。气泡文字自动选择黑色或白色以保持对比度，背景区实时预览。外观偏好保存在当前浏览器，恢复默认不删除云端头像、账号或聊天记录。
+
+头像验证：`NODE_USE_ENV_PROXY=1 node tests/avatar-fixtures.mjs` 创建两名临时用户与好友测试数据；通过界面上传头像后，运行 `NODE_USE_ENV_PROXY=1 node tests/avatar-permissions.mjs` 验证权限。凭据仅写入 Git 忽略的 `.test-avatar-accounts.json`；完成后须先清空头像引用、删除头像存储文件并全局退出测试会话，再删除这两名测试用户及凭据文件。
