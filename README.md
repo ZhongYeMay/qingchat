@@ -2,7 +2,7 @@
 
 线上地址：https://zhongyemay.github.io/qingchat/
 
-Chat 3.3 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
+Chat 3.4 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
 
 ## 使用
 
@@ -76,3 +76,13 @@ NODE_USE_ENV_PROXY=1 node tests/custom-sharing.integration.mjs
 「外观」新增头像形状、自选气泡颜色、气泡圆角；「聊天偏好」新增紧凑/舒适间距、聊天头像与时间显示开关。气泡文字自动选择黑色或白色以保持对比度，背景区实时预览。外观偏好保存在当前浏览器，恢复默认不删除云端头像、账号或聊天记录。
 
 头像验证：`NODE_USE_ENV_PROXY=1 node tests/avatar-fixtures.mjs` 创建两名临时用户与好友测试数据；通过界面上传头像后，运行 `NODE_USE_ENV_PROXY=1 node tests/avatar-permissions.mjs` 验证权限。凭据仅写入 Git 忽略的 `.test-avatar-accounts.json`；完成后须先清空头像引用、删除头像存储文件并全局退出测试会话，再删除这两名测试用户及凭据文件。
+
+## 注册邀请
+
+「设置 → 注册邀请 → 管理注册邀请」可创建专属 `invite.html?i=...` 链接，自定义标题、欢迎语、公开署名、注册按钮、主题色、背景色、封面及卡片/分栏布局，并提供实时预览。支持 1/7/30 天有效期；编辑保存后重新计算有效期，保持原链接；撤销不可重新启用。链接在聊天中展示专属邀请卡片。
+
+访客在邀请页通过 Supabase Auth 正常注册，再进入主站。两页共用已有会话存储键；开启邮箱确认时须按邮件提示完成验证。邀请不是全站注册门槛，不会自动添加好友。邀请页在注册提交前重新检查链接，服务端也会对每次公开信息和封面读取检查撤销与过期状态。
+
+表 `chat_invites` 启用 RLS，仅创建者能读取管理数据和编辑；匿名接口 `registration-invite` 以随机 UUID 能力链接返回白名单公开字段，服务端密钥仅在函数环境中使用。封面压缩为 1200×675 WebP，最多 1 MB，保存在私有 `chat-invite-covers` 桶；匿名图片代理只提供该有效邀请引用的封面。外部平台的 Open Graph 卡片仍为静态 Chat 通用卡片。
+
+`NODE_USE_ENV_PROXY=1 node tests/invitations.integration.mjs` 创建两名测试账号和邀请，验证所有权、公开信息范围、有效期与不可恢复的撤销。凭据在 Git 忽略的 `.test-invite-accounts.json`；测试后须先清理测试邀请和封面、全局退出，再删除对应测试用户及凭据文件。
