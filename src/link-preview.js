@@ -1,0 +1,16 @@
+import {publicUrl,extractLinks} from '../supabase/functions/link-preview/policy.js';
+export function createLinkPreviews({db,el,icon,sharing}){
+ const cache=new Map(),observers=new Set();let generation=0,active=0;const queue=[];
+ function schedule(task){return new Promise((resolve,reject)=>{queue.push({task,resolve,reject});run()})}
+ function run(){while(active<3&&queue.length){const job=queue.shift();active++;job.task().then(job.resolve,job.reject).finally(()=>{active--;run()})}}
+ async function data(url){const existing=cache.get(url);if(existing&&existing.until>Date.now())return existing.promise;const promise=schedule(async()=>{const {data,error}=await db.functions.invoke('link-preview',{body:{url}});if(error||!data?.available)throw new Error('Unavailable');return data});cache.set(url,{promise,until:Date.now()+900000});while(cache.size>200)cache.delete(cache.keys().next().value);promise.catch(()=>{if(cache.get(url)?.promise===promise)cache.set(url,{promise,until:Date.now()+60000})});return promise}
+ function render(text,container){const links=extractLinks(text);if(!links.length){container.textContent=text;return}let position=0;for(const link of links){container.append(document.createTextNode(text.slice(position,link.start)));const a=el('a','message-link',link.text);a.href=link.url;a.target='_blank';a.rel='noopener noreferrer';container.append(a);position=link.end}container.append(document.createTextNode(text.slice(position)));
+ // One preview per message keeps conversations compact and bounds metadata requests.
+ const first=links[0],url=publicUrl(first.url);if(!url)return;
+ const chatUrl=new URL(first.url);if(chatUrl.origin==='https://zhongyemay.github.io'&&chatUrl.pathname==='/qingchat/share.html'){sharing.preview(first.url,container);return}
+ const card=el('a','web-link-card');card.href=first.url;card.target='_blank';card.rel='noopener noreferrer';card.ariaLabel='打开链接：'+new URL(url).hostname;const detail=el('div','web-link-detail'),heading=el('strong','',new URL(url).hostname),summary=el('p','','正在获取链接预览…'),site=el('small','',new URL(url).hostname);detail.append(heading,summary,site);card.append(icon('globe'),detail);container.append(card);const current=generation;
+ const observer='IntersectionObserver'in window?new IntersectionObserver(entries=>{if(!card.isConnected){observer.disconnect();observers.delete(observer);return}if(entries.some(e=>e.isIntersecting)){observer.disconnect();observers.delete(observer);load()}},{rootMargin:'200px'}):null;if(observer){observers.add(observer);observer.observe(card);}else load();
+ async function load(){try{const result=await data(url);if(!card.isConnected||current!==generation)return;heading.textContent=result.title;summary.textContent=result.description||'打开网页查看内容';card.ariaLabel='打开链接：'+result.title;if(result.image){const img=el('img','web-link-image');img.alt='网页封面';img.loading='lazy';img.referrerPolicy='no-referrer';img.src=result.image;img.onerror=()=>img.remove();card.querySelector('.icon')?.remove();card.prepend(img)}}catch{if(card.isConnected&&current===generation){heading.textContent=new URL(url).hostname;summary.textContent='打开链接查看内容';card.classList.add('preview-unavailable')}}}
+ }
+ return {render,clear:()=>{generation++;cache.clear();observers.forEach(o=>o.disconnect());observers.clear()}};
+}

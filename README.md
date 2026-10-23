@@ -2,7 +2,7 @@
 
 线上地址：https://zhongyemay.github.io/qingchat/
 
-Chat 3.1 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
+Chat 3.2 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
 
 ## 使用
 
@@ -56,3 +56,13 @@ NODE_USE_ENV_PROXY=1 node tests/custom-sharing.integration.mjs
 ```
 
 自定义分享测试使用独立的 `.test-custom-shares.json` 保存待清理测试资源。集成测试会创建真实测试账号、好友、内容和图片，将凭据保存在 Git 忽略的 `.test-v3-accounts.json`。只在允许测试邮箱自动确认的项目运行，完成后必须清理对应测试账号及存储对象；严禁提交凭据文件。旧聊天测试位于 `tests/integration.mjs`，使用独立的 `.test-accounts.json`。
+
+## 网页链接预览
+
+聊天消息中的 HTTP/HTTPS 链接可点击，每条消息按需展示首个链接的标题、摘要、封面和真实来源域名。文字混排、中文标点及 Chat 分享链接均受支持。预览失败时保留可打开的域名卡片。
+
+`supabase/functions/link-preview` 校验当前用户的 Auth token，再向固定 Microlink API 请求公开网页元数据，不直接抓取用户指定的主机。没有服务端密钥或数据库写入。每用户限流、并发上限、响应大小和超时限制，以及短期内存缓存，限制预览请求；缓存与限流按 Edge isolate 生效，不是全局配额。
+
+预览会将网址发送给 Microlink，封面由浏览器按无 Referer 模式加载。内网地址、URL 用户名密码及含访问令牌等参数的链接不自动抓取。第三方 API 免费额度、站点反爬和登录要求可能导致缺少预览。部署 `link-preview` 时关闭网关 JWT 检查，由函数内 `auth.getUser(token)` 验证当前用户，以兼容现有 publishable key。
+
+验证：`node --test tests/link-preview.test.mjs`。覆盖认证、敏感链接过滤、固定请求目标、元数据解析、缓存、失败降级、限流和响应大小限制。
