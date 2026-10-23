@@ -2,14 +2,14 @@
 
 线上地址：https://zhongyemay.github.io/qingchat/
 
-Chat 3.0 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
+Chat 3.1 使用 Google 官方 Material Web 组件与 Material Design 3 配色系统，支持浅色、深色、主题色和聊天外观自定义。前端由 GitHub Pages 托管，账号、聊天、动态与图片由 Supabase Auth、Postgres、Realtime 和私有 Storage 提供。
 
 ## 使用
 
 1. 在「设置 → 账号与登录」注册或登录，编辑 Chat 号、昵称、签名和头像颜色。
 2. 在通讯录添加朋友；对方接受后即可收发文字、表情、图片，并同步消息与已读状态。
 3. 「动态」支持好友圈、公开广场、关注和收藏；可以发布文字与最多四张图片，点赞、评论、关注、收藏和转发公开动态。「公开」表示所有已登录的 Chat 用户可见。
-4. 点击单条消息的分享操作，或聊天顶部的分享按钮，选择最多 30 条消息生成只读快照。默认隐藏昵称，可设 1/7/30 天有效期。在「设置 → 聊天分享」查看和撤销链接。任何获得链接的人都能在有效期内阅读所选内容，撤销不会删除对方已保存的副本。
+4. 点击动态上的「分享」，或在聊天中选择最多 30 条消息，创建只读快照。两类分享均可自定义标题、说明、分享署名、主题色、分享内图片封面、昵称显示与 1/7/30 天有效期；创建前有卡片预览。在「设置 → 隐私与分享」统一查看和撤销链接。好友动态仅作者本人可创建公开链接；公开动态可由其他登录用户分享。动态快照不含评论、点赞和收藏，原动态删除后对应分享同时失效。任何获得链接的人都能在有效期内阅读所选内容，撤销不会删除对方已保存的副本。
 5. 在「设置 → 系统通知」主动授权通知，可测试通知并控制是否显示消息正文。网页在后台且保持打开时，新消息会触发浏览器系统通知，点击可返回对应聊天。关闭网页后的 Web Push 尚未实现；系统也可能限制通知。iPhone/iPad 需先添加到主屏幕，且浏览器须支持相关 API。
 6. 「设置 → 关于 → 更新日志」保留各次版本变化，后续发布也应同步维护。
 
@@ -52,6 +52,7 @@ Supabase 项目：ChattingHub Pro（`uaxnhmaczwjldvjhcysk`）。迁移位于 `su
 ```sh
 node tests/sw.test.mjs
 NODE_USE_ENV_PROXY=1 node tests/social-integration.mjs
+NODE_USE_ENV_PROXY=1 node tests/custom-sharing.integration.mjs
 ```
 
-集成测试会创建真实测试账号、好友、内容和图片，将凭据保存在 Git 忽略的 `.test-v3-accounts.json`。只在允许测试邮箱自动确认的项目运行，完成后必须清理对应测试账号及存储对象；严禁提交凭据文件。旧聊天测试位于 `tests/integration.mjs`，使用独立的 `.test-accounts.json`。
+自定义分享测试使用独立的 `.test-custom-shares.json` 保存待清理测试资源。集成测试会创建真实测试账号、好友、内容和图片，将凭据保存在 Git 忽略的 `.test-v3-accounts.json`。只在允许测试邮箱自动确认的项目运行，完成后必须清理对应测试账号及存储对象；严禁提交凭据文件。旧聊天测试位于 `tests/integration.mjs`，使用独立的 `.test-accounts.json`。

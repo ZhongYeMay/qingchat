@@ -11,17 +11,19 @@ Deno.serve(async req=>{
  const key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
  if(!key)return json({error:'服务暂不可用'},503);
  const db=createClient(Deno.env.get('SUPABASE_URL')!,key,{auth:{persistSession:false,autoRefreshToken:false}});
- const {data:share,error}=await db.from('chat_shares').select('id,title,snapshot,expires_at,created_at,revoked').eq('id',token).eq('revoked',false).gt('expires_at',new Date().toISOString()).maybeSingle();
+ const {data:share,error}=await db.from('chat_shares').select('id,title,snapshot,expires_at,created_at,revoked,kind,description,byline,accent,cover_index').eq('id',token).eq('revoked',false).gt('expires_at',new Date().toISOString()).maybeSingle();
  if(error)return json({error:'分享暂时无法加载'},503);
  if(!share)return json({error:'分享不存在、已撤销或已过期'},404);
  if(url.searchParams.has('image')){
   const index=Number(url.searchParams.get('image'));if(!Number.isInteger(index)||index<0||index>=share.snapshot.length)return json({error:'Image not found'},404);
   const path=share.snapshot[index]?.image_path;if(typeof path!=='string'||!/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/[a-z0-9_-]{1,100}\.(png|jpe?g|webp|gif)$/i.test(path))return json({error:'Image not found'},404);
-  const {data,error}=await db.storage.from('qingchat-images').download(path);
+  const bucket=share.snapshot[index]?.image_bucket||'qingchat-images';
+  if(!['qingchat-images','chat-post-images'].includes(bucket))return json({error:'Image not found'},404);
+  const {data,error}=await db.storage.from(bucket).download(path);
   if(error||!data)return json({error:'图片暂时无法加载'},404);
   const type=['image/png','image/jpeg','image/webp','image/gif'].includes(data.type)?data.type:'application/octet-stream';
   return new Response(data,{headers:{...headers,'Content-Type':type}});
  }
  const items=share.snapshot.map((m:{sender:string,body:string,image_path?:string,created_at:string},i:number)=>({sender:m.sender,body:m.body,created_at:m.created_at,image_url:m.image_path?`${Deno.env.get('SUPABASE_URL')}/functions/v1/chat-share?token=${encodeURIComponent(token)}&image=${i}`:null}));
- return json({id:share.id,title:share.title,created_at:share.created_at,expires_at:share.expires_at,count:items.length,messages:items});
+ return json({id:share.id,kind:share.kind,description:share.description,byline:share.byline,accent:share.accent,cover_index:share.cover_index,title:share.title,created_at:share.created_at,expires_at:share.expires_at,count:items.length,messages:items});
 });

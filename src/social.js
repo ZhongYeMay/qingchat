@@ -1,5 +1,5 @@
 export function createSocial(ctx){
- const {db,$,el,avatar,modal,toast,check,explain,getUser,getMe,getFriends,selectTab,formatTime,icon,addFriend}=ctx;
+ const {db,$,el,avatar,modal,toast,check,explain,getUser,getMe,getFriends,selectTab,formatTime,icon,addFriend,sharePost}=ctx;
  let scope='friends',posts=[],stats=new Map(),profiles=new Map(),following=new Set(),busy=false,again=false,hasMore=false,generation=0,channel=null;
  const list=$('feed-list'),more=$('feed-more'),imageUrls=new Map();
  const uid=()=>getUser()?.id;
@@ -17,7 +17,7 @@ export function createSocial(ctx){
   if(p.author_id===uid())head.append(button('delete','删除',()=>removePost(p),'quiet'));else head.append(button(following.has(p.author_id)?'check':'plus',following.has(p.author_id)?'已关注':'关注',()=>toggleFollow(p.author_id),'follow-button'));
   card.append(head);if(p.body)card.append(el('p','post-body',p.body));postImages(p.image_paths,card);
   if(p.repost_of){const original=p.original;const quote=el('div','repost-card');if(original){quote.append(el('strong','',profileName(original.author_id)),el('p','',original.body||'[图片动态]'));postImages(original.image_paths,quote)}else quote.append(el('p','','原动态已不可见'));card.append(quote)}
-  const actions=el('div','post-actions');const like=button('heart',String(s.likes||0),()=>toggleLike(p),s.liked?'selected':'');like.ariaLabel=s.liked?'取消点赞':'点赞';like.setAttribute('aria-pressed',String(s.liked));const comment=button('comment',String(s.comments||0),()=>comments(p));comment.ariaLabel='评论';const repost=button('repost',String(s.reposts||0),()=>compose(p.original||p));repost.ariaLabel='转发';repost.disabled=!!(p.repost_of&&!p.original)||(p.original||p).visibility!=='public';repost.title=repost.disabled?'好友可见的动态不能转发':'转发这条公开动态';const save=button('bookmark',s.saved?'已收藏':'收藏',()=>toggleSave(p),s.saved?'selected':'');save.ariaLabel=s.saved?'取消收藏':'收藏';save.setAttribute('aria-pressed',String(s.saved));actions.append(like,comment,repost,save);card.append(actions);list.append(card);
+  const actions=el('div','post-actions');const like=button('heart',String(s.likes||0),()=>toggleLike(p),s.liked?'selected':'');like.ariaLabel=s.liked?'取消点赞':'点赞';like.setAttribute('aria-pressed',String(s.liked));const comment=button('comment',String(s.comments||0),()=>comments(p));comment.ariaLabel='评论';const repost=button('repost',String(s.reposts||0),()=>compose(p.original||p));repost.ariaLabel='转发';repost.disabled=!!(p.repost_of&&!p.original)||(p.original||p).visibility!=='public';repost.title=repost.disabled?'好友可见的动态不能转发':'转发这条公开动态';const save=button('bookmark',s.saved?'已收藏':'收藏',()=>toggleSave(p),s.saved?'selected':'');save.ariaLabel=s.saved?'取消收藏':'收藏';save.setAttribute('aria-pressed',String(s.saved));const share=button('share','分享',()=>sharePost(p));share.disabled=p.visibility!=='public'&&p.author_id!==uid();share.title=share.disabled?'好友动态仅作者本人可创建公开分享':'自定义分享这条动态';actions.append(like,comment,repost,save,share);card.append(actions);list.append(card);
  }
  more.hidden=!hasMore;more.disabled=false;
  }

@@ -152,7 +152,7 @@ function applyMaterialTheme(root,mode,accent){
  for(const [name,tone] of Object.entries({'surface':dark?6:98,'surface-dim':dark?6:87,'surface-bright':dark?24:98,'surface-container-lowest':dark?4:100,'surface-container-low':dark?10:96,'surface-container':dark?12:94,'surface-container-high':dark?17:92,'surface-container-highest':dark?22:90})){root.style.setProperty('--md-sys-color-'+name,hexFromArgb(neutral.tone(tone)))}
 }
 const moduleContext={db,$,el,avatar,modal,toast,check,explain,icon,formatTime,getUser:()=>user,getMe:()=>me,getFriends:()=>friends,selectTab,addFriend};
-const social=createSocial(moduleContext);
+const social=createSocial({...moduleContext,sharePost:post=>sharing.openPost(post)});
 const sharing=createSharing({...moduleContext,getMessages:()=>messages});
 const notifications=createNotifications({toast,onOpenChat:handleNotificationChat});
 async function handleNotificationChat(id){if(!/^[0-9a-f-]{36}$/i.test(id))return;pendingChat=id;if(!user){selectTab('settings');toast('登录后打开对应聊天');return}if(refreshing)return;if(!friends.some(f=>f.id===id))await refresh();openPendingChat()}
